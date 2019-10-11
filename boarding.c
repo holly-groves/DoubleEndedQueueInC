@@ -65,7 +65,7 @@ int addPassenger(BoardingQueue *qPtr, char name[], double passportNumber, int se
 
 	//INPUT VALIDATION CHECKS
 	// checks that there is a name to add to the new passenger
-	if (name[0] == NULL)
+	if (name == NULL)
 		return INVALID_INPUT_PARAMETER;
 	// checks that there is a passport number to add to the new passenger
 	if (passportNumber < 1)
@@ -75,7 +75,7 @@ int addPassenger(BoardingQueue *qPtr, char name[], double passportNumber, int se
 		return INVALID_INPUT_PARAMETER;
 
 	//initialise fields in the new passenger
-	strcpy(newPassenger->name[0], name[0]);
+	strcpy(newPassenger->name, name);
 	newPassenger->passportNumber = passportNumber;
 	newPassenger->seatNumber = seatNumber;
 	//next passenger should be set to null
@@ -116,7 +116,7 @@ int addPriorityPassenger(BoardingQueue *qPtr, char name[], double passportNumber
 
 	//INPUT VALIDATION CHECKS
 	// checks that there is a name to add to the new passenger
-	if (name[0] == NULL)
+	if (name == NULL)
 		return INVALID_INPUT_PARAMETER;
 	// checks that there is a passport number to add to the new passenger
 	if (passportNumber < 1)
@@ -126,7 +126,7 @@ int addPriorityPassenger(BoardingQueue *qPtr, char name[], double passportNumber
 		return INVALID_INPUT_PARAMETER;
 
 	//initialise fields in the new node
-	strcpy(newPassenger->name[0], name[0]);
+	strcpy(newPassenger->name, name);
 	newPassenger->passportNumber = passportNumber;
 	newPassenger->seatNumber = seatNumber;
 	//set the next passenger to the passenger at the top of the queue
