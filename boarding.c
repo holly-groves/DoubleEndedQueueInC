@@ -3,6 +3,8 @@
 	Matric number: 18007261
 	Module code: AC21008
 	Multi-Paradigm programming Assignment 1
+	Double Ended Queue
+		Passengers boarding a plane
 */
 
 #include "boarding.h"
@@ -64,14 +66,14 @@ int addPassenger(BoardingQueue *qPtr, char name[], double passportNumber, int se
 	}
 
 	//INPUT VALIDATION CHECKS
-	// checks that there is a name to add to the new passenger
+	// checks that there is a name to add to the new passenger and it is less than 30 characters to avoid memory errors
 	if (name == NULL)
 		return INVALID_INPUT_PARAMETER;
 	// checks that there is a passport number to add to the new passenger
-	if (passportNumber < 1)
+	if (passportNumber < 1 || passportNumber > 88000)
 		return INVALID_INPUT_PARAMETER;
 	//checks that there is a seat numver to add to the new passenger
-	if (seatNumber < 1)
+	if (seatNumber < 1 || seatNumber > 150)
 		return INVALID_INPUT_PARAMETER;
 
 	//initialise fields in the new passenger
@@ -81,11 +83,12 @@ int addPassenger(BoardingQueue *qPtr, char name[], double passportNumber, int se
 	//next passenger should be set to null
 	newPassenger->next = NULL;
 
-
-	// set the new passenger's next pointer to the next node in the queue
-	// it will be set to whatever is currently the bottom of the queue
-	// this is because a new passenger is added to the bottom of the queue while a priority passenger is added to the top
-	newPassenger->next = qPtr->tail;
+	//if the queue is empty set the head and tail of the queue to point to the new passenger
+	if (qPtr->tail == NULL && qPtr->head == NULL)
+	{
+		qPtr->tail = newPassenger;
+		qPtr->head = newPassenger;
+	}
 
 	//make the new passenger the bottom of the queue
 	qPtr->tail = newPassenger;
@@ -115,14 +118,14 @@ int addPriorityPassenger(BoardingQueue *qPtr, char name[], double passportNumber
 
 
 	//INPUT VALIDATION CHECKS
-	// checks that there is a name to add to the new passenger
+	// checks that there is a name to add to the new passenger and it is less than 30 characters to avoid memory errors
 	if (name == NULL)
 		return INVALID_INPUT_PARAMETER;
 	// checks that there is a passport number to add to the new passenger
-	if (passportNumber < 1)
+	if (passportNumber < 1 || passportNumber > 88000)
 		return INVALID_INPUT_PARAMETER;
 	//checks that there is a seat numver to add to the new passenger
-	if (seatNumber < 1)
+	if (seatNumber < 1 || seatNumber > 150)
 		return INVALID_INPUT_PARAMETER;
 
 	//initialise fields in the new node
@@ -132,9 +135,13 @@ int addPriorityPassenger(BoardingQueue *qPtr, char name[], double passportNumber
 	//set the next passenger to the passenger at the top of the queue
 	newPassenger->next = qPtr->head;
 
-	// set the new passengers next pointer to the next node in the queue
-	// it will be set to whatever is currently the top of the queue
-	newPassenger->next = qPtr->head;
+	//if the queue is empty 
+	//set the head and tail of the queue to point to the new passenger
+	if (qPtr->tail == NULL && qPtr->head == NULL)
+	{
+		qPtr->tail = newPassenger;
+		qPtr->head = newPassenger;
+	}
 
 	//make the new passenger the bottom of the queue
 	qPtr->head = newPassenger;
@@ -142,7 +149,7 @@ int addPriorityPassenger(BoardingQueue *qPtr, char name[], double passportNumber
 	return SUCCESS;
 }
 
-//remove the passenger at the top of the queue
+//remove the passenger at the head of the queue
 //parameters:
 //	qPtr a pointer to the queue
 //	p the passenger to be removed
@@ -159,20 +166,27 @@ int removePassenger(BoardingQueue *qPtr, Passenger *p) {
 	if (qPtr->head == NULL)
 		return INVALID_QUEUE_OPERATION;
 
-	//create a pointer to the passenger that is being removed
-	Passenger *pToRemove = qPtr->head;
+	//store the passenger to be removed (the passenger at the head of the queue)
+	strcpy(p->name, qPtr->head->name);
+	p->passportNumber = qPtr->head->passportNumber;
+	p->seatNumber = qPtr->head->seatNumber;
+	p->next = qPtr->head->next;
 
-	//make the head of the queue to be the next passenger in the queue
-	qPtr->head = qPtr->head->next;
+	//store the pointer to the passenger to be removed
+	Passenger *pRemove = qPtr->head;
 
-	//remove the passenger from the queue
-	pToRemove->next = NULL;
-	free(pToRemove);
+
+	//if the head passenger has a next passenger
+	//if there is more than one passenger in the queue
+	if (qPtr->head->next)
+		qPtr->head = pRemove->next; //make the head of the queue to be the next passenger in the queue
+
+	free(pRemove); //free the passenger
 
 	return SUCCESS;
 }
 
-//peek at the passenger who is first in the queue
+//peek at the passenger who is first in the queue (at the head)
 //paramters:
 //	qPtr a pointer to the queue
 //	p will receive the passenger at the head of the queue
@@ -198,6 +212,10 @@ int peekAtHeadPassenger(BoardingQueue *qPtr, Passenger *p) {
 	// return NOT_IMPLEMENTED;
 }
 
+//peek at the passenger who is last in the queue (at the end)
+//paramters:
+//	qPtr a pointer to the queue
+//	p will recieve the passenger at the tail of the queue
 int peekAtTailPassenger(BoardingQueue *qPtr, Passenger *p) {
 	//check that we have a pointer to a valid queue
 	if (qPtr == NULL)
@@ -217,6 +235,9 @@ int peekAtTailPassenger(BoardingQueue *qPtr, Passenger *p) {
 	// return NOT_IMPLEMENTED;
 }
 
+//empty a queue
+//parameters:
+//	qPtr - a pointer to the queue that will be cleared/emptied
 int clearBoardingQueue(BoardingQueue *qPtr) {
 	//check that the pointer is to a valid queue
 	if (qPtr == NULL)
@@ -242,7 +263,66 @@ int clearBoardingQueue(BoardingQueue *qPtr) {
 	// return NOT_IMPLEMENTED;
 }
 
+//sorts the queue in order by seat number
+//lowest seat number is at the front of the queue
+//parameters:
+//	qPtr - a pointer to the queue to be sorted
 int sortBoardingQueue(BoardingQueue *qPtr) {
+
+	//validation
+	if (qPtr == NULL)
+		return INVALID_INPUT_PARAMETER;
+
+	//variable for loop
+	int sorted = 0;
+
+	//temporary variables;
+	char tempName[30];
+	double tempNum;
+	int tempSeat;
+	Passenger *temp;
+	Passenger *nextInQ;
+
+	//initalise values
+	temp = qPtr->head;
+	nextInQ = qPtr->head->next;
+
+	//loop to go through the passengers and order them
+	while (sorted != 1)
+	{	
+		if (temp->seatNumber > nextInQ->seatNumber)
+		{
+			//swap values for seat number
+			tempSeat = temp->seatNumber;
+			temp->seatNumber = nextInQ->seatNumber;
+			nextInQ->seatNumber = tempSeat;
+
+			//swap values for name
+			strcpy(tempName, temp->name);
+			strcpy(temp->name, nextInQ->name);
+			strcpy(nextInQ->name, tempName);
+
+			//swap values for passport number
+			tempNum = temp->passportNumber;
+			temp->passportNumber = nextInQ->passportNumber;
+			nextInQ->passportNumber = tempNum;
+		}
+
+		temp = temp->next; //go to the next passenger in the queue
+		nextInQ = temp->next;
+
+		//exit condition
+		if (temp->next == NULL)
+		{
+			sorted = 1;
+		}
+	}
+
+	return SUCCESS;
+
+	/*
+	INCASE IT DOESN'T WORK
 	(void)qPtr;
 	return NOT_IMPLEMENTED;
+	*/
 }
